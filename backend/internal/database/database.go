@@ -5,6 +5,8 @@ import (
 	"embed"
 	"fmt"
 	"os"
+	"sort"
+	"strings"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -32,13 +34,28 @@ func Connect() (*sql.DB, error) {
 }
 
 func Migrate(db *sql.DB) error {
-	sqlBytes, err := migrations.ReadFile("migrations/001_makes.sql")
+	entries, err := migrations.ReadDir("migrations")
 	if err != nil {
-		return fmt.Errorf("read migration: %w", err)
+		return fmt.Errorf("list migrations: %w", err)
 	}
 
-	if _, err := db.Exec(string(sqlBytes)); err != nil {
-		return fmt.Errorf("run migration: %w", err)
+	names := make([]string, 0, len(entries))
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".sql") {
+			continue
+		}
+		names = append(names, e.Name())
+	}
+	sort.Strings(names)
+
+	for _, name := range names {
+		sqlBytes, err := migrations.ReadFile("migrations/" + name)
+		if err != nil {
+			return fmt.Errorf("read migration %s: %w", name, err)
+		}
+		if _, err := db.Exec(string(sqlBytes)); err != nil {
+			return fmt.Errorf("run migration %s: %w", name, err)
+		}
 	}
 
 	return nil
