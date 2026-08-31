@@ -24,6 +24,11 @@ func (in *CreateCarRequest) Validate() error {
 		return &InputError{Message: "price cannot be negative"}
 	case in.Mileage < 0:
 		return &InputError{Message: "mileage cannot be negative"}
-	}
+	
+   case len(in.Images) < 0:
+	return &InputError{Message: "at least one image is required"}
+	   case len(in.Images) > 20:
+	return &InputError{Message: "maximum 20 images allowed"}
+		}
 	return nil
 }
