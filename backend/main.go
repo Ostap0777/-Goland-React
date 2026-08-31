@@ -1,6 +1,7 @@
 package main
 
 import (
+	"backend/internal/car"
 	"backend/internal/database"
 	"backend/internal/httputil"
 	"backend/internal/makes"
@@ -34,6 +35,9 @@ func main() {
 
 	makesStore := makes.NewStore(db)
 	makes.NewHandler(makesStore).Register(mux)
+
+	carRepo := car.NewPostgresRepository(db)
+	car.NewHandler(car.NewService(carRepo)).Register(mux)
 
 	addr := ":8080"
 	log.Printf("car marketplace backend listening on %s", addr)

@@ -1,20 +1,22 @@
+version: "3.8"
+
 services:
-  db:
-    image: postgres:16
-    container_name: car-marketplace-db
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: caruser
-      POSTGRES_PASSWORD: carpass
+      POSTGRES_USER: car_admin
+      POSTGRES_PASSWORD: car_pass
       POSTGRES_DB: car_marketplace
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - car-marketplace-pg-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U caruser -d car_marketplace"]
+      test: ["CMD-SHELL", "pg_isready -U car_admin -d car_marketplace"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
 volumes:
-  postgres_data:
+  car-marketplace-pg-data:
