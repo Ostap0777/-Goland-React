@@ -3,27 +3,27 @@ package car
 import "time"
 
 type CreateCarRequest struct {
-	Make        string `json:"make"`
-	Model       string `json:"model"`
-	Year        int    `json:"year"`
-	Price       int64  `json:"price"`
-	Mileage     int64  `json:"mileage"`
-	Description string `json:"description"`
-	SellerName  string `json:"sellerName"`
-	Images      []CreateCarImage   `json:"images"`
+    Make        string            `json:"make"`
+    Model       string            `json:"model"`
+    Year        int               `json:"year"`
+    Price       int64             `json:"price"`
+    Mileage     int64             `json:"mileage"`
+    Description string            `json:"description"`
+    SellerName  string            `json:"sellerName"`
+    Images      []CreateCarImage  `json:"images"`
 }
 
 type CarResponse struct {
-	ID          int64              `json:"id"`
-	Make        string             `json:"make"`
-	Model       string             `json:"model"`
-	Year        int                `json:"year"`
-	Price       int64              `json:"price"`
-	Mileage     int64              `json:"mileage"`
-	Description string             `json:"description"`
-	SellerName  string             `json:"sellerName"`
-	Images      []CarImageResponse `json:"images,omitempty"`
-	CreatedAt   string             `json:"createdAt"`
+    ID          int64              `json:"id"`
+    Make        string             `json:"make"`
+    Model       string             `json:"model"`
+    Year        int                `json:"year"`
+    Price       int64              `json:"price"`
+    Mileage     int64              `json:"mileage"`
+    Description string             `json:"description"`
+    SellerName  string             `json:"sellerName"`
+    Images      []CarImageResponse `json:"images,omitempty"`
+    CreatedAt   string             `json:"createdAt"`
 }
 
 type CreateCarImage struct {
@@ -59,6 +59,7 @@ func toResponse(c *Car) CarResponse {
 		Price:       c.Price,
 		Mileage:     c.Mileage,
 		Description: c.Description,
+		Images: images,
 		SellerName:  c.SellerName,
 		CreatedAt:   c.CreatedAt.UTC().Format(time.RFC3339),
 	}

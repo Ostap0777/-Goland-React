@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -24,6 +25,7 @@ func NewPostgresRepository(db *sql.DB) *PostgresRepository {
 func (r *PostgresRepository) Create(ctx context.Context, car *Car) error {
    tx, err := r.db.BeginTx(ctx, nil)
    if err != nil {
+      log.Printf("[ERROR Create Tx Begin]: %v", err)
       return err
    }
    defer tx.Rollback()
@@ -39,12 +41,14 @@ RETURNING id, created_at`
       ctx, carQuery,
       car.Make, car.Model, car.Year, car.Price, car.Mileage, car.Description, car.SellerName,
    ).Scan(&car.ID, &car.CreatedAt)
-   
+
    if errors.Is(err, sql.ErrNoRows) {
+      log.Printf("[ERROR Create Car]: Unknown make '%s'", car.Make)
       return ErrUnknownMake
    }
    if err != nil {
-      return err
+      log.Printf("[ERROR Create Car Query]: %v", err)
+      return fmt.Errorf("failed to insert car: %w", err)
    }
 
    if len(car.Images) > 0 {
@@ -60,12 +64,18 @@ RETURNING id, created_at`
             car.Images[i].CarID, car.Images[i].URL, car.Images[i].IsMain, car.Images[i].Order,
          ).Scan(&car.Images[i].ID, &car.Images[i].CreatedAt)
          if err != nil {
-            return err
+            log.Printf("[ERROR Create Image Query index %d]: %v", i, err)
+            return fmt.Errorf("failed to insert image: %w", err)
          }
       }
    }
 
-   return tx.Commit()
+   if err := tx.Commit(); err != nil {
+      log.Printf("[ERROR Create Tx Commit]: %v", err)
+      return err
+   }
+
+   return nil
 }
 
 func (r *PostgresRepository) GetByID(ctx context.Context, id int64) (*Car, error) {
