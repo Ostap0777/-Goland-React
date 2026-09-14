@@ -39,7 +39,7 @@ function CarFormModal({ onClose }: CarFormModalProps) {
     e.preventDefault();
     try {
       const formattedImages: CarImageRequest[] = files.map((file, index) => ({
-        url: file.name, // або заповнене посилання/Base64
+        url: file.name,
         isMain: index === 0,
         order: index + 1,
       }));
