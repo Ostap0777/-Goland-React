@@ -6,15 +6,24 @@ import (
 	"backend/internal/database"
 	"backend/internal/httputil"
 	"backend/internal/makes"
+	"backend/internal/middleware"
 	"backend/internal/users"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/joho/godotenv"
 )
 
 func main() {
 	_ = godotenv.Load()
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = "super-secret-key"
+	}
+
+	authMiddleware := middleware.AuthMiddleware(jwtSecret)
 
 	db, err := database.Connect()
 	if err != nil {
@@ -36,20 +45,21 @@ func main() {
 	})
 
 // 1. Existing modules
-	makesStore := makes.NewStore(db)
+   makesStore := makes.NewStore(db)
 	makes.NewHandler(makesStore).Register(mux)
 
-	carRepo := car.NewPostgresRepository(db)
-	car.NewHandler(car.NewService(carRepo)).Register(mux)
+ 	carRepo := car.NewPostgresRepository(db)
+   carHandler := car.NewHandler(car.NewService(carRepo))
+	carHandler.Register(mux, authMiddleware)
 
 	// 2. Users module
-	userRepo := users.NewPostgresRepository(db)
+   userRepo := users.NewPostgresRepository(db)
 	userService := users.NewService(userRepo)
 	userHandler := users.NewHandler(userService)
-	userHandler.Register(mux)
+	userHandler.Register(mux, authMiddleware)
 
 	// 3. Auth module (використовує userRepo для створення/пошуку користувачів)
-	authService := auth.NewService(userRepo)
+   authService := auth.NewService(userRepo, jwtSecret)
 	authHandler := auth.NewHandler(authService)
 	authHandler.RegisterRoutes(mux)
 	addr := ":8080"
