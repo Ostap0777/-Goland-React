@@ -15,12 +15,12 @@ func NewHandler(s Service) *Handler {
 	return &Handler{service: s}
 }
 
-func (h *Handler) Register(mux *http.ServeMux) {
+func (h *Handler) Register(mux *http.ServeMux, authMiddleware func(http.Handler) http.Handler) {
 	mux.HandleFunc("GET /api/cars", h.list)
-	mux.HandleFunc("POST /api/cars", h.create)
 	mux.HandleFunc("GET /api/cars/{id}", h.get)
-	mux.HandleFunc("PUT /api/cars/{id}", h.update)
-	mux.HandleFunc("DELETE /api/cars/{id}", h.delete)
+	mux.Handle("POST /api/cars", authMiddleware(http.HandlerFunc(h.create)))
+	mux.Handle("PUT /api/cars/{id}", authMiddleware(http.HandlerFunc(h.update)))
+	mux.Handle("DELETE /api/cars/{id}", authMiddleware(http.HandlerFunc(h.delete)))
 }
 
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
