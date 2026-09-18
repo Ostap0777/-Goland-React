@@ -1,10 +1,12 @@
 package main
 
 import (
+	"backend/internal/auth"
 	"backend/internal/car"
 	"backend/internal/database"
 	"backend/internal/httputil"
 	"backend/internal/makes"
+	"backend/internal/users"
 	"log"
 	"net/http"
 
@@ -33,12 +35,23 @@ func main() {
 		httputil.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 
+// 1. Existing modules
 	makesStore := makes.NewStore(db)
 	makes.NewHandler(makesStore).Register(mux)
 
 	carRepo := car.NewPostgresRepository(db)
 	car.NewHandler(car.NewService(carRepo)).Register(mux)
 
+	// 2. Users module
+	userRepo := users.NewPostgresRepository(db)
+	userService := users.NewService(userRepo)
+	userHandler := users.NewHandler(userService)
+	userHandler.Register(mux)
+
+	// 3. Auth module (використовує userRepo для створення/пошуку користувачів)
+	authService := auth.NewService(userRepo)
+	authHandler := auth.NewHandler(authService)
+	authHandler.RegisterRoutes(mux)
 	addr := ":8080"
 	log.Printf("car marketplace backend listening on %s", addr)
 	if err := http.ListenAndServe(addr, httputil.WithCORS(mux)); err != nil {

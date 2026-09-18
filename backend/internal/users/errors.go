@@ -3,8 +3,8 @@ package users
 import "errors"
 
 var (
-	ErrNotFound = errors.New("user not found")
-	ErrDuplicate = errors.New("user already exists")
+	ErrUserNotFound = errors.New("user not found")
+	ErrUserDuplicate = errors.New("user already exists")
 )
 
 type InputError struct {
