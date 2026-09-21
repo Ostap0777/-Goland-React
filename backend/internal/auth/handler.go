@@ -15,12 +15,12 @@ func NewHandler(s Service) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
-mux.HandleFunc("POST /api/auth/register", h.Register)
-	// mux.HandleFunc("GET /api/user/{id}", h.getByEmail)
+   mux.HandleFunc("POST /api/auth/register", h.register)
+	mux.HandleFunc("GET /api/user/{id}", h.getByEmail)
 	// mux.HandleFunc("PUT /api/user/{email}", h.update)
 }
 
-func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) register(w http.ResponseWriter, r *http.Request) {
 var req RegisterRequest
 
 	// 1. Декодування тіла запиту
@@ -51,3 +51,26 @@ var req RegisterRequest
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(userResp)
 }
+
+func (h *Handler) getByEmail(w http.ResponseWriter, r *http.Request) {
+	email := r.URL.Query().Get("email")
+	if email == "" {
+       http.Error(w, "Email parameter is required", http.StatusBadRequest)
+       return
+	}
+
+	userResp, err := h.service.GetByEmail(r.Context(), email)
+	if err != nil {
+		if errors.Is(err, ErrEmailNotFound) {
+			http.Error(w, "Email not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(userResp)
+}
+

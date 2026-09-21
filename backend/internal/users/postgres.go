@@ -48,7 +48,7 @@ func (r *PostgresRepository) Create(ctx context.Context, user *User) error {
 
 func (r *PostgresRepository) GetByID(ctx context.Context, id int64) (*User, error) {
 	query := `
-	SELECT first_name, second_name, email, password, phone, created_at
+	SELECT id, first_name, second_name, email, password, phone, created_at
 	FROM users
 	WHERE id = $1
 	`

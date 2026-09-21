@@ -10,17 +10,23 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 var ErrEmailAlreadyExists = errors.New("user with this email already exists")
+var ErrEmailNotFound = errors.New("user with this emailnot found")
 
 type Service interface {
 	Register(ctx context.Context, req RegisterRequest) (RegisterResponse, error)
+	GetByEmail(ctx context.Context, email string) (RegisterResponse, error)
 }
 
 type service struct {
-	userRepo users.Repository // або auth.Repository
+	userRepo users.Repository
+	jwtSecret string
 }
 
-func NewService(userRepo users.Repository) Service {
-	return &service{userRepo: userRepo}
+func NewService(userRepo users.Repository, jwtSecret string) Service {
+	return &service{
+		userRepo: userRepo,
+		jwtSecret: jwtSecret,
+	}
 }
 
 func (s *service) Register(ctx context.Context, req RegisterRequest) (RegisterResponse, error) {
@@ -41,6 +47,20 @@ func (s *service) Register(ctx context.Context, req RegisterRequest) (RegisterRe
 		return RegisterResponse{}, err
 	}
 
+	return RegisterResponse{
+		User: users.ToUserResponse(user),
+	}, nil
+}
+
+func (s *service) GetByEmail(ctx context.Context, email string) (RegisterResponse, error) {
+
+	user, err := s.userRepo.GetByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, users.ErrUserNotFound) {
+			return RegisterResponse{}, ErrEmailNotFound
+		}
+		return RegisterResponse{}, fmt.Errorf("failed to get user by email: %w", err)
+	}
 	return RegisterResponse{
 		User: users.ToUserResponse(user),
 	}, nil
