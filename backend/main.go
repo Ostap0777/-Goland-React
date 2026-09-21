@@ -44,7 +44,6 @@ func main() {
 		httputil.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 
-// 1. Existing modules
    makesStore := makes.NewStore(db)
 	makes.NewHandler(makesStore).Register(mux)
 
@@ -52,16 +51,15 @@ func main() {
    carHandler := car.NewHandler(car.NewService(carRepo))
 	carHandler.Register(mux, authMiddleware)
 
-	// 2. Users module
    userRepo := users.NewPostgresRepository(db)
 	userService := users.NewService(userRepo)
 	userHandler := users.NewHandler(userService)
 	userHandler.Register(mux, authMiddleware)
 
-	// 3. Auth module (використовує userRepo для створення/пошуку користувачів)
    authService := auth.NewService(userRepo, jwtSecret)
 	authHandler := auth.NewHandler(authService)
 	authHandler.RegisterRoutes(mux)
+
 	addr := ":8080"
 	log.Printf("car marketplace backend listening on %s", addr)
 	if err := http.ListenAndServe(addr, httputil.WithCORS(mux)); err != nil {

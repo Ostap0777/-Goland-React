@@ -14,8 +14,8 @@ func NewHandler(s Service) *Handler {
 	return &Handler{service: s}
 }
 
-func (h *Handler) Register(mux *http.ServeMux) {
-	mux.HandleFunc("GET /api/user/{id}", h.getByID)
+func (h *Handler) Register(mux *http.ServeMux, authMiddleware func(http.Handler) http.Handler) {
+	mux.Handle("GET /api/user/{id}",authMiddleware(http.HandlerFunc(h.getByID)))
 	// mux.HandleFunc("GET /api/user/{id}", h.getByEmail)
 	// mux.HandleFunc("PUT /api/user/{email}", h.update)
 }
